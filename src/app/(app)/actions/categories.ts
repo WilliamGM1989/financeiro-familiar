@@ -1,0 +1,110 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
+import { getFamilyId } from '@/lib/supabase/get-family'
+import type { Database } from '@/lib/supabase/database.types'
+
+type CategoryRow = Database['public']['Tables']['categories']['Row']
+
+export async function createCategory(
+  formData: FormData
+): Promise<{ error: string } | { data: CategoryRow }> {
+  try {
+    const family_id = await getFamilyId()
+    const supabase = await createClient()
+
+    const name = formData.get('name') as string
+    const type = formData.get('type') as CategoryRow['type']
+    const icon = (formData.get('icon') as string) || 'tag'
+    const color = (formData.get('color') as string) || '#6B7280'
+
+    if (!name?.trim()) return { error: 'Nome é obrigatório' }
+    if (!type) return { error: 'Tipo é obrigatório' }
+
+    const { data, error } = await supabase
+      .from('categories')
+      .insert({ family_id, name: name.trim(), type, icon, color })
+      .select()
+      .single()
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/')
+    return { data }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+  }
+}
+
+export async function updateCategory(
+  id: string,
+  formData: FormData
+): Promise<{ error: string } | { data: CategoryRow }> {
+  try {
+    const family_id = await getFamilyId()
+    const supabase = await createClient()
+
+    const { data: existing, error: fetchError } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('id', id)
+      .eq('family_id', family_id)
+      .single()
+
+    if (fetchError || !existing) return { error: 'Categoria não encontrada' }
+
+    const updates: Database['public']['Tables']['categories']['Update'] = {}
+
+    const name = formData.get('name') as string | null
+    const type = formData.get('type') as CategoryRow['type'] | null
+    const icon = formData.get('icon') as string | null
+    const color = formData.get('color') as string | null
+
+    if (name?.trim()) updates.name = name.trim()
+    if (type) updates.type = type
+    if (icon) updates.icon = icon
+    if (color) updates.color = color
+
+    const { data, error } = await supabase
+      .from('categories')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/')
+    return { data }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+  }
+}
+
+export async function deleteCategory(
+  id: string
+): Promise<{ error: string } | { data: null }> {
+  try {
+    const family_id = await getFamilyId()
+    const supabase = await createClient()
+
+    const { data: existing, error: fetchError } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('id', id)
+      .eq('family_id', family_id)
+      .single()
+
+    if (fetchError || !existing) return { error: 'Categoria não encontrada' }
+
+    const { error } = await supabase.from('categories').delete().eq('id', id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/')
+    return { data: null }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+  }
+}
