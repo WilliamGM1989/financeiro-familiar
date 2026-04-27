@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getFamilyId } from '@/lib/supabase/get-family'
+import { sanitizeError } from '@/lib/error-handler'
 import type { Database } from '@/lib/supabase/database.types'
 
 type TransactionRow = Database['public']['Tables']['transactions']['Row']
@@ -21,18 +22,20 @@ export async function createTransaction(
 
     const account_id = formData.get('account_id') as string
     const category_id = (formData.get('category_id') as string) || null
-    const description = formData.get('description') as string | null
+    const description = ((formData.get('description') as string | null) ?? '').trim() || null
     const amount = parseFloat(formData.get('amount') as string)
     const type = formData.get('type') as TransactionRow['type']
     const date = formData.get('date') as string
     const due_date = (formData.get('due_date') as string) || null
     const paid = formData.get('paid') === 'true'
-    const notes = (formData.get('notes') as string) || null
+    const notes = ((formData.get('notes') as string | null) ?? '').trim() || null
 
     if (!account_id) return { error: 'Conta é obrigatória' }
     if (!type) return { error: 'Tipo é obrigatório' }
     if (!date) return { error: 'Data é obrigatória' }
     if (isNaN(amount)) return { error: 'Valor inválido' }
+    if (description && description.length > 500) return { error: 'Descrição excede o tamanho máximo permitido' }
+    if (notes && notes.length > 500) return { error: 'Observações excedem o tamanho máximo permitido' }
 
     const { data: account, error: accountError } = await supabase
       .from('accounts')
@@ -61,12 +64,12 @@ export async function createTransaction(
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }
 
@@ -102,13 +105,18 @@ export async function updateTransaction(
     }
 
     const category_id = formData.get('category_id') as string | null
-    const description = formData.get('description') as string | null
+    const descriptionRaw = formData.get('description') as string | null
+    const description = descriptionRaw !== null ? descriptionRaw.trim() : null
     const amountRaw = formData.get('amount') as string | null
     const type = formData.get('type') as TransactionRow['type'] | null
     const date = formData.get('date') as string | null
     const due_date = formData.get('due_date') as string | null
     const paidRaw = formData.get('paid') as string | null
-    const notes = formData.get('notes') as string | null
+    const notesRaw = formData.get('notes') as string | null
+    const notes = notesRaw !== null ? notesRaw.trim() : null
+
+    if (description && description.length > 500) return { error: 'Descrição excede o tamanho máximo permitido' }
+    if (notes && notes.length > 500) return { error: 'Observações excedem o tamanho máximo permitido' }
 
     if (category_id !== null) updates.category_id = category_id || null
     if (description !== null) updates.description = description
@@ -126,12 +134,12 @@ export async function updateTransaction(
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }
 
@@ -153,11 +161,11 @@ export async function deleteTransaction(
 
     const { error } = await supabase.from('transactions').delete().eq('id', id)
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data: null }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }

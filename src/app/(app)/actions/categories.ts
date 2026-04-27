@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getFamilyId } from '@/lib/supabase/get-family'
+import { sanitizeError } from '@/lib/error-handler'
 import type { Database } from '@/lib/supabase/database.types'
 
 type CategoryRow = Database['public']['Tables']['categories']['Row']
@@ -14,26 +15,27 @@ export async function createCategory(
     const family_id = await getFamilyId()
     const supabase = await createClient()
 
-    const name = formData.get('name') as string
+    const name = ((formData.get('name') as string) ?? '').trim()
     const type = formData.get('type') as CategoryRow['type']
     const icon = (formData.get('icon') as string) || 'tag'
     const color = (formData.get('color') as string) || '#6B7280'
 
-    if (!name?.trim()) return { error: 'Nome é obrigatório' }
+    if (!name) return { error: 'Nome é obrigatório' }
+    if (name.length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
     if (!type) return { error: 'Tipo é obrigatório' }
 
     const { data, error } = await supabase
       .from('categories')
-      .insert({ family_id, name: name.trim(), type, icon, color })
+      .insert({ family_id, name, type, icon, color })
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }
 
@@ -61,6 +63,8 @@ export async function updateCategory(
     const icon = formData.get('icon') as string | null
     const color = formData.get('color') as string | null
 
+    if (name !== null && name.trim().length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
+
     if (name?.trim()) updates.name = name.trim()
     if (type) updates.type = type
     if (icon) updates.icon = icon
@@ -73,12 +77,12 @@ export async function updateCategory(
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }
 
@@ -100,11 +104,11 @@ export async function deleteCategory(
 
     const { error } = await supabase.from('categories').delete().eq('id', id)
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data: null }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }

@@ -1,56 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useActionState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { registerAction } from '../actions'
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const [name, setName] = useState('')
-  const [familyName, setFamilyName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    const supabase = createClient()
-
-    // 1. Create account in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: name },
-      },
-    })
-
-    if (authError || !authData.user) {
-      setError('Erro ao criar conta. Verifique os dados e tente novamente.')
-      setLoading(false)
-      return
-    }
-
-    // 2. Criar família + membro + categorias padrão via RPC segura (SECURITY DEFINER)
-    // Evita deadlock de RLS e garante operação atômica server-side
-    const { error: rpcError } = await supabase.rpc('register_family', {
-      p_family_name: familyName,
-    })
-
-    if (rpcError) {
-      setError('Erro ao configurar família. Tente novamente.')
-      setLoading(false)
-      return
-    }
-
-    router.push('/dashboard')
-    router.refresh()
-  }
+  const [state, formAction, pending] = useActionState(registerAction, null)
 
   return (
     <>
@@ -59,7 +14,7 @@ export default function RegisterPage() {
         Configure sua família e comece a organizar
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form action={formAction} className="space-y-4">
         <div>
           <label
             htmlFor="name"
@@ -69,11 +24,10 @@ export default function RegisterPage() {
           </label>
           <input
             id="name"
+            name="name"
             type="text"
             autoComplete="name"
             required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
             placeholder="João Silva"
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
           />
@@ -88,10 +42,9 @@ export default function RegisterPage() {
           </label>
           <input
             id="familyName"
+            name="familyName"
             type="text"
             required
-            value={familyName}
-            onChange={(e) => setFamilyName(e.target.value)}
             placeholder="Família Silva"
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
           />
@@ -106,11 +59,10 @@ export default function RegisterPage() {
           </label>
           <input
             id="email"
+            name="email"
             type="email"
             autoComplete="email"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
             placeholder="voce@exemplo.com"
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
           />
@@ -125,29 +77,28 @@ export default function RegisterPage() {
           </label>
           <input
             id="password"
+            name="password"
             type="password"
             autoComplete="new-password"
             required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
+            minLength={8}
+            placeholder="Mín. 8 caracteres, 1 maiúscula e 1 número"
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
           />
         </div>
 
-        {error && (
+        {state?.error && (
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
-            {error}
+            {state.error}
           </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={pending}
           className="w-full py-3 px-4 bg-[#064E3B] hover:bg-emerald-800 text-white font-semibold rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed mt-2"
         >
-          {loading ? 'Criando conta...' : 'Criar conta'}
+          {pending ? 'Criando conta...' : 'Criar conta'}
         </button>
       </form>
 

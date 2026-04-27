@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
   {
@@ -69,6 +70,14 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <nav
@@ -138,6 +147,29 @@ export default function BottomNav() {
             </Link>
           )
         })}
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center gap-1.5 transition-all"
+          aria-label="Sair"
+        >
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              color: '#f87171',
+              border: '1.5px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </div>
+          <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.03em', color: 'rgba(255,255,255,0.3)' }}>
+            Sair
+          </span>
+        </button>
       </div>
     </nav>
   )

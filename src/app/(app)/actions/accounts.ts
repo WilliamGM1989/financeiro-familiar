@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getFamilyId } from '@/lib/supabase/get-family'
+import { sanitizeError } from '@/lib/error-handler'
 import type { Database } from '@/lib/supabase/database.types'
 
 type AccountRow = Database['public']['Tables']['accounts']['Row']
@@ -14,27 +15,28 @@ export async function createAccount(
     const family_id = await getFamilyId()
     const supabase = await createClient()
 
-    const name = formData.get('name') as string
+    const name = ((formData.get('name') as string) ?? '').trim()
     const type = formData.get('type') as AccountRow['type']
     const initial_balance = parseFloat((formData.get('initial_balance') as string) ?? '0')
     const color = (formData.get('color') as string) || '#10B981'
     const icon = (formData.get('icon') as string) || 'wallet'
 
-    if (!name?.trim()) return { error: 'Nome é obrigatório' }
+    if (!name) return { error: 'Nome é obrigatório' }
+    if (name.length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
     if (!type) return { error: 'Tipo é obrigatório' }
 
     const { data, error } = await supabase
       .from('accounts')
-      .insert({ family_id, name: name.trim(), type, initial_balance, color, icon })
+      .insert({ family_id, name, type, initial_balance, color, icon })
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }
 
@@ -55,7 +57,7 @@ export async function updateAccount(
 
     if (fetchError || !existing) return { error: 'Conta não encontrada' }
 
-    const name = formData.get('name') as string
+    const name = ((formData.get('name') as string) ?? '').trim()
     const type = formData.get('type') as AccountRow['type']
     const initial_balance = formData.get('initial_balance')
       ? parseFloat(formData.get('initial_balance') as string)
@@ -63,8 +65,10 @@ export async function updateAccount(
     const color = formData.get('color') as string | null
     const icon = formData.get('icon') as string | null
 
+    if (name && name.length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
+
     const updates: Database['public']['Tables']['accounts']['Update'] = {}
-    if (name?.trim()) updates.name = name.trim()
+    if (name) updates.name = name
     if (type) updates.type = type
     if (initial_balance !== undefined) updates.initial_balance = initial_balance
     if (color) updates.color = color
@@ -77,12 +81,12 @@ export async function updateAccount(
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }
 
@@ -104,11 +108,11 @@ export async function deleteAccount(
 
     const { error } = await supabase.from('accounts').delete().eq('id', id)
 
-    if (error) return { error: error.message }
+    if (error) return { error: sanitizeError(error) }
 
     revalidatePath('/')
     return { data: null }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Erro inesperado' }
+    return { error: sanitizeError(e) }
   }
 }

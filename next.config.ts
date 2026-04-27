@@ -1,26 +1,30 @@
 import type { NextConfig } from 'next'
-import { createRequire } from 'module'
+import withPWAInit from '@ducanh2912/next-pwa'
 
-const require = createRequire(import.meta.url)
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const withPWA = require('next-pwa')({
+const withPWA = withPWAInit({
   dest: 'public',
-  register: true,
-  skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
 })
 
 const nextConfig: NextConfig = {
-  // Turbopack is enabled by default in Next.js 16.
-  // next-pwa uses a webpack plugin; we disable it in dev to avoid conflicts.
-  // In production (next build), webpack is used and next-pwa works correctly.
   turbopack: {},
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://lynfdqebtujvytyboozs.supabase.co",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

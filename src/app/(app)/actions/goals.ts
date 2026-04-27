@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getFamilyId } from '@/lib/supabase/get-family'
+import { sanitizeError } from '@/lib/error-handler'
 import { revalidatePath } from 'next/cache'
 
 export async function createGoal(formData: FormData) {
@@ -14,6 +15,7 @@ export async function createGoal(formData: FormData) {
   const deadline = String(formData.get('deadline') ?? '').trim() || null
 
   if (!name) return { error: 'Nome da meta é obrigatório.' }
+  if (name.length > 100) return { error: 'Nome excede o tamanho máximo permitido.' }
   if (isNaN(targetAmount) || targetAmount <= 0) return { error: 'Valor alvo deve ser maior que zero.' }
 
   const { error } = await supabase.from('goals').insert({
@@ -24,7 +26,7 @@ export async function createGoal(formData: FormData) {
     deadline,
   })
 
-  if (error) return { error: error.message }
+  if (error) return { error: sanitizeError(error) }
 
   revalidatePath('/cadastros')
   revalidatePath('/dashboard')
@@ -33,34 +35,22 @@ export async function createGoal(formData: FormData) {
 
 export async function updateGoalProgress(id: string, formData: FormData) {
   const supabase = await createClient()
-  const familyId = await getFamilyId()
 
   const add = parseFloat(String(formData.get('add_amount') ?? '0'))
   if (isNaN(add) || add <= 0) return { error: 'Valor deve ser maior que zero.' }
 
-  // Fetch current value first
-  const { data: goal, error: fetchError } = await supabase
-    .from('goals')
-    .select('current_amount, target_amount')
-    .eq('id', id)
-    .eq('family_id', familyId)
-    .single()
+  // RPC atômica — elimina o race condition de read-modify-write.
+  // O banco aplica LEAST(current_amount + p_amount, target_amount) em um único UPDATE.
+  const { data, error } = await supabase.rpc('add_goal_progress', {
+    p_goal_id: id,
+    p_amount: add,
+  })
 
-  if (fetchError || !goal) return { error: 'Meta não encontrada.' }
-
-  const newCurrent = Math.min(goal.current_amount + add, goal.target_amount)
-
-  const { error } = await supabase
-    .from('goals')
-    .update({ current_amount: newCurrent })
-    .eq('id', id)
-    .eq('family_id', familyId)
-
-  if (error) return { error: error.message }
+  if (error) return { error: sanitizeError(error) }
 
   revalidatePath('/cadastros')
   revalidatePath('/dashboard')
-  return { success: true }
+  return { success: true, current_amount: data as number }
 }
 
 export async function deleteGoal(id: string) {
@@ -73,7 +63,7 @@ export async function deleteGoal(id: string) {
     .eq('id', id)
     .eq('family_id', familyId)
 
-  if (error) return { error: error.message }
+  if (error) return { error: sanitizeError(error) }
 
   revalidatePath('/cadastros')
   revalidatePath('/dashboard')
