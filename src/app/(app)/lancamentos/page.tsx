@@ -41,7 +41,7 @@ export default async function LancamentosPage({
   const supabase = await createClient()
 
   const { data: transactions } = await supabase
-    .from('transactions')
+    .from('Gestao_FamiliarWilltransactions')
     .select(`
       id,
       description,

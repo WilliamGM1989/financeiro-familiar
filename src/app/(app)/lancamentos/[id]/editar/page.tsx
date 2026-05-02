@@ -14,9 +14,9 @@ export default async function EditarLancamentoPage({
   const supabase = await createClient()
 
   const [{ data: transaction }, { data: categories }, { data: accounts }] = await Promise.all([
-    supabase.from('transactions').select('*').eq('id', id).eq('family_id', familyId).single(),
-    supabase.from('categories').select('*').eq('family_id', familyId).order('name'),
-    supabase.from('accounts').select('*').eq('family_id', familyId).eq('is_active', true).order('name'),
+    supabase.from('Gestao_FamiliarWilltransactions').select('*').eq('id', id).eq('family_id', familyId).single(),
+    supabase.from('Gestao_FamiliarWillcategories').select('*').eq('family_id', familyId).order('name'),
+    supabase.from('Gestao_FamiliarWillaccounts').select('*').eq('family_id', familyId).eq('is_active', true).order('name'),
   ])
 
   if (!transaction) notFound()

@@ -1,14 +1,14 @@
 -- Families
-CREATE TABLE families (
+CREATE TABLE Gestao_FamiliarWillfamilies (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   created_at timestamptz DEFAULT now()
 );
 
 -- Family Members
-CREATE TABLE family_members (
+CREATE TABLE Gestao_FamiliarWillfamily_members (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id uuid REFERENCES families(id) ON DELETE CASCADE,
+  family_id uuid REFERENCES Gestao_FamiliarWillfamilies(id) ON DELETE CASCADE,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   role text CHECK (role IN ('admin', 'member')) DEFAULT 'member',
   invited_email text,
@@ -18,9 +18,9 @@ CREATE TABLE family_members (
 );
 
 -- Accounts
-CREATE TABLE accounts (
+CREATE TABLE Gestao_FamiliarWillaccounts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id uuid REFERENCES families(id) ON DELETE CASCADE NOT NULL,
+  family_id uuid REFERENCES Gestao_FamiliarWillfamilies(id) ON DELETE CASCADE NOT NULL,
   name text NOT NULL,
   type text CHECK (type IN ('checking', 'savings', 'wallet', 'credit_card')) DEFAULT 'checking',
   initial_balance numeric(15,2) DEFAULT 0,
@@ -31,9 +31,9 @@ CREATE TABLE accounts (
 );
 
 -- Categories
-CREATE TABLE categories (
+CREATE TABLE Gestao_FamiliarWillcategories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id uuid REFERENCES families(id) ON DELETE CASCADE NOT NULL,
+  family_id uuid REFERENCES Gestao_FamiliarWillfamilies(id) ON DELETE CASCADE NOT NULL,
   name text NOT NULL,
   type text CHECK (type IN ('income', 'expense')) NOT NULL,
   icon text DEFAULT 'tag',
@@ -42,11 +42,11 @@ CREATE TABLE categories (
 );
 
 -- Transactions
-CREATE TABLE transactions (
+CREATE TABLE Gestao_FamiliarWilltransactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id uuid REFERENCES families(id) ON DELETE CASCADE NOT NULL,
-  account_id uuid REFERENCES accounts(id) ON DELETE CASCADE NOT NULL,
-  category_id uuid REFERENCES categories(id) ON DELETE SET NULL,
+  family_id uuid REFERENCES Gestao_FamiliarWillfamilies(id) ON DELETE CASCADE NOT NULL,
+  account_id uuid REFERENCES Gestao_FamiliarWillaccounts(id) ON DELETE CASCADE NOT NULL,
+  category_id uuid REFERENCES Gestao_FamiliarWillcategories(id) ON DELETE SET NULL,
   user_id uuid REFERENCES auth.users(id) NOT NULL,
   description text,
   amount numeric(15,2) NOT NULL,
@@ -61,11 +61,11 @@ CREATE TABLE transactions (
 );
 
 -- Recurring
-CREATE TABLE recurring (
+CREATE TABLE Gestao_FamiliarWillrecurring (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id uuid REFERENCES families(id) ON DELETE CASCADE NOT NULL,
-  account_id uuid REFERENCES accounts(id) ON DELETE CASCADE NOT NULL,
-  category_id uuid REFERENCES categories(id) ON DELETE SET NULL,
+  family_id uuid REFERENCES Gestao_FamiliarWillfamilies(id) ON DELETE CASCADE NOT NULL,
+  account_id uuid REFERENCES Gestao_FamiliarWillaccounts(id) ON DELETE CASCADE NOT NULL,
+  category_id uuid REFERENCES Gestao_FamiliarWillcategories(id) ON DELETE SET NULL,
   description text NOT NULL,
   amount numeric(15,2) NOT NULL,
   type text CHECK (type IN ('income', 'expense')) NOT NULL,
@@ -76,9 +76,9 @@ CREATE TABLE recurring (
 );
 
 -- Goals
-CREATE TABLE goals (
+CREATE TABLE Gestao_FamiliarWillgoals (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  family_id uuid REFERENCES families(id) ON DELETE CASCADE NOT NULL,
+  family_id uuid REFERENCES Gestao_FamiliarWillfamilies(id) ON DELETE CASCADE NOT NULL,
   name text NOT NULL,
   target_amount numeric(15,2) NOT NULL,
   current_amount numeric(15,2) DEFAULT 0,
@@ -87,61 +87,31 @@ CREATE TABLE goals (
 );
 
 -- Indexes
-CREATE INDEX idx_transactions_family_date ON transactions(family_id, date DESC);
-CREATE INDEX idx_transactions_account ON transactions(account_id);
-CREATE INDEX idx_transactions_due_date ON transactions(due_date) WHERE paid = false;
+CREATE INDEX idx_gfw_transactions_family_date ON Gestao_FamiliarWilltransactions(family_id, date DESC);
+CREATE INDEX idx_gfw_transactions_account ON Gestao_FamiliarWilltransactions(account_id);
+CREATE INDEX idx_gfw_transactions_due_date ON Gestao_FamiliarWilltransactions(due_date) WHERE paid = false;
 
 -- Enable RLS
-ALTER TABLE families ENABLE ROW LEVEL SECURITY;
-ALTER TABLE family_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE recurring ENABLE ROW LEVEL SECURITY;
-ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWillfamilies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWillfamily_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWillaccounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWillcategories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWilltransactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWillrecurring ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Gestao_FamiliarWillgoals ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
-CREATE POLICY "Users see own family data" ON transactions
-  FOR ALL USING (
-    family_id IN (
-      SELECT family_id FROM family_members WHERE user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users see own family data" ON accounts
-  FOR ALL USING (
-    family_id IN (
-      SELECT family_id FROM family_members WHERE user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users see own family data" ON categories
-  FOR ALL USING (
-    family_id IN (
-      SELECT family_id FROM family_members WHERE user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users see own family data" ON recurring
-  FOR ALL USING (
-    family_id IN (
-      SELECT family_id FROM family_members WHERE user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users see own family data" ON goals
-  FOR ALL USING (
-    family_id IN (
-      SELECT family_id FROM family_members WHERE user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users see own family" ON families
-  FOR ALL USING (
-    id IN (
-      SELECT family_id FROM family_members WHERE user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users see own membership" ON family_members
+CREATE POLICY "Users see own family data" ON Gestao_FamiliarWilltransactions
+  FOR ALL USING (family_id IN (SELECT family_id FROM Gestao_FamiliarWillfamily_members WHERE user_id = auth.uid()));
+CREATE POLICY "Users see own family data" ON Gestao_FamiliarWillaccounts
+  FOR ALL USING (family_id IN (SELECT family_id FROM Gestao_FamiliarWillfamily_members WHERE user_id = auth.uid()));
+CREATE POLICY "Users see own family data" ON Gestao_FamiliarWillcategories
+  FOR ALL USING (family_id IN (SELECT family_id FROM Gestao_FamiliarWillfamily_members WHERE user_id = auth.uid()));
+CREATE POLICY "Users see own family data" ON Gestao_FamiliarWillrecurring
+  FOR ALL USING (family_id IN (SELECT family_id FROM Gestao_FamiliarWillfamily_members WHERE user_id = auth.uid()));
+CREATE POLICY "Users see own family data" ON Gestao_FamiliarWillgoals
+  FOR ALL USING (family_id IN (SELECT family_id FROM Gestao_FamiliarWillfamily_members WHERE user_id = auth.uid()));
+CREATE POLICY "Users see own family" ON Gestao_FamiliarWillfamilies
+  FOR ALL USING (id IN (SELECT family_id FROM Gestao_FamiliarWillfamily_members WHERE user_id = auth.uid()));
+CREATE POLICY "Users see own membership" ON Gestao_FamiliarWillfamily_members
   FOR ALL USING (user_id = auth.uid());

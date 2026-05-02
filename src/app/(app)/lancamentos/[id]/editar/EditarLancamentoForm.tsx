@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { updateTransaction, deleteTransaction } from '@/app/(app)/actions/transactions'
 import type { Database } from '@/lib/supabase/database.types'
 
-type CategoryRow = Database['public']['Tables']['categories']['Row']
-type AccountRow  = Database['public']['Tables']['accounts']['Row']
-type TransactionRow = Database['public']['Tables']['transactions']['Row']
+type CategoryRow = Database['public']['Tables']['Gestao_FamiliarWillcategories']['Row']
+type AccountRow  = Database['public']['Tables']['Gestao_FamiliarWillaccounts']['Row']
+type TransactionRow = Database['public']['Tables']['Gestao_FamiliarWilltransactions']['Row']
 
 interface Props {
   transaction: TransactionRow

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { updateAccount } from '@/app/(app)/actions/accounts'
 import type { Database } from '@/lib/supabase/database.types'
 
-type AccountRow = Database['public']['Tables']['accounts']['Row']
+type AccountRow = Database['public']['Tables']['Gestao_FamiliarWillaccounts']['Row']
 
 const PRESET_COLORS = [
   '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B',

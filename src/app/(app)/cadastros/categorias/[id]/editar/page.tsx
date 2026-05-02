@@ -10,7 +10,7 @@ export default async function EditarCategoriaPage({ params }: { params: Promise<
   const supabase = await createClient()
 
   const { data: category } = await supabase
-    .from('categories')
+    .from('Gestao_FamiliarWillcategories')
     .select('*')
     .eq('id', id)
     .eq('family_id', family_id)

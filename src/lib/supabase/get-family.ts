@@ -14,7 +14,7 @@ export const getFamilyId = cache(async (): Promise<string> => {
   }
 
   const { data, error } = await supabase
-    .from('family_members')
+    .from('Gestao_FamiliarWillfamily_members')
     .select('family_id')
     .eq('user_id', user.id)
     .eq('status', 'active')

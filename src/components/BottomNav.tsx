@@ -43,6 +43,18 @@ const navItems = [
     ),
   },
   {
+    href: '/ciclos',
+    label: 'Ciclos',
+    color: '#a78bfa',
+    bg: 'linear-gradient(135deg,#a78bfa,#7c3aed)',
+    shadow: '0 4px 14px rgba(167,139,250,0.55)',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
     href: '/relatorios',
     label: 'Relatórios',
     color: '#fbbf24',

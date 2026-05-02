@@ -9,7 +9,7 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      families: {
+      Gestao_FamiliarWillfamilies: {
         Row: {
           id: string
           name: string
@@ -27,7 +27,7 @@ export interface Database {
         }
         Relationships: []
       }
-      family_members: {
+      Gestao_FamiliarWillfamily_members: {
         Row: {
           id: string
           family_id: string
@@ -65,7 +65,7 @@ export interface Database {
           }
         ]
       }
-      accounts: {
+      Gestao_FamiliarWillaccounts: {
         Row: {
           id: string
           family_id: string
@@ -109,7 +109,7 @@ export interface Database {
           }
         ]
       }
-      categories: {
+      Gestao_FamiliarWillcategories: {
         Row: {
           id: string
           family_id: string
@@ -147,7 +147,7 @@ export interface Database {
           }
         ]
       }
-      transactions: {
+      Gestao_FamiliarWilltransactions: {
         Row: {
           id: string
           family_id: string
@@ -163,6 +163,7 @@ export interface Database {
           paid_at: string | null
           transfer_id: string | null
           notes: string | null
+          payment_cycle: 'dia05' | 'dia20' | null
           created_at: string
         }
         Insert: {
@@ -180,6 +181,7 @@ export interface Database {
           paid_at?: string | null
           transfer_id?: string | null
           notes?: string | null
+          payment_cycle?: 'dia05' | 'dia20' | null
           created_at?: string
         }
         Update: {
@@ -197,6 +199,7 @@ export interface Database {
           paid_at?: string | null
           transfer_id?: string | null
           notes?: string | null
+          payment_cycle?: 'dia05' | 'dia20' | null
           created_at?: string
         }
         Relationships: [
@@ -216,7 +219,7 @@ export interface Database {
           }
         ]
       }
-      recurring: {
+      Gestao_FamiliarWillrecurring: {
         Row: {
           id: string
           family_id: string
@@ -266,7 +269,7 @@ export interface Database {
           }
         ]
       }
-      goals: {
+      Gestao_FamiliarWillgoals: {
         Row: {
           id: string
           family_id: string

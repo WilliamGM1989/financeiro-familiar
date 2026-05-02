@@ -10,7 +10,7 @@ export default async function EditarContaPage({ params }: { params: Promise<{ id
   const supabase = await createClient()
 
   const { data: account } = await supabase
-    .from('accounts')
+    .from('Gestao_FamiliarWillaccounts')
     .select('*')
     .eq('id', id)
     .eq('family_id', family_id)

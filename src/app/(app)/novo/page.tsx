@@ -9,12 +9,12 @@ export default async function NovoLancamentoPage() {
 
   const [{ data: categories }, { data: accounts }] = await Promise.all([
     supabase
-      .from('categories')
+      .from('Gestao_FamiliarWillcategories')
       .select('*')
       .eq('family_id', family_id)
       .order('name'),
     supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .select('*')
       .eq('family_id', family_id)
       .eq('is_active', true)

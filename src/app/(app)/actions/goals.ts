@@ -18,7 +18,7 @@ export async function createGoal(formData: FormData) {
   if (name.length > 100) return { error: 'Nome excede o tamanho máximo permitido.' }
   if (isNaN(targetAmount) || targetAmount <= 0) return { error: 'Valor alvo deve ser maior que zero.' }
 
-  const { error } = await supabase.from('goals').insert({
+  const { error } = await supabase.from('Gestao_FamiliarWillgoals').insert({
     family_id: familyId,
     name,
     target_amount: targetAmount,
@@ -58,7 +58,7 @@ export async function deleteGoal(id: string) {
   const familyId = await getFamilyId()
 
   const { error } = await supabase
-    .from('goals')
+    .from('Gestao_FamiliarWillgoals')
     .delete()
     .eq('id', id)
     .eq('family_id', familyId)

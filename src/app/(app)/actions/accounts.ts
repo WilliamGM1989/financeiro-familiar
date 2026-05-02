@@ -6,7 +6,7 @@ import { getFamilyId } from '@/lib/supabase/get-family'
 import { sanitizeError } from '@/lib/error-handler'
 import type { Database } from '@/lib/supabase/database.types'
 
-type AccountRow = Database['public']['Tables']['accounts']['Row']
+type AccountRow = Database['public']['Tables']['Gestao_FamiliarWillaccounts']['Row']
 
 export async function createAccount(
   formData: FormData
@@ -26,7 +26,7 @@ export async function createAccount(
     if (!type) return { error: 'Tipo é obrigatório' }
 
     const { data, error } = await supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .insert({ family_id, name, type, initial_balance, color, icon })
       .select()
       .single()
@@ -49,7 +49,7 @@ export async function updateAccount(
     const supabase = await createClient()
 
     const { data: existing, error: fetchError } = await supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .select('id')
       .eq('id', id)
       .eq('family_id', family_id)
@@ -67,7 +67,7 @@ export async function updateAccount(
 
     if (name && name.length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
 
-    const updates: Database['public']['Tables']['accounts']['Update'] = {}
+    const updates: Database['public']['Tables']['Gestao_FamiliarWillaccounts']['Update'] = {}
     if (name) updates.name = name
     if (type) updates.type = type
     if (initial_balance !== undefined) updates.initial_balance = initial_balance
@@ -75,7 +75,7 @@ export async function updateAccount(
     if (icon) updates.icon = icon
 
     const { data, error } = await supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .update(updates)
       .eq('id', id)
       .select()
@@ -98,7 +98,7 @@ export async function deleteAccount(
     const supabase = await createClient()
 
     const { data: existing, error: fetchError } = await supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .select('id')
       .eq('id', id)
       .eq('family_id', family_id)
@@ -106,7 +106,7 @@ export async function deleteAccount(
 
     if (fetchError || !existing) return { error: 'Conta não encontrada' }
 
-    const { error } = await supabase.from('accounts').delete().eq('id', id)
+    const { error } = await supabase.from('Gestao_FamiliarWillaccounts').delete().eq('id', id)
 
     if (error) return { error: sanitizeError(error) }
 

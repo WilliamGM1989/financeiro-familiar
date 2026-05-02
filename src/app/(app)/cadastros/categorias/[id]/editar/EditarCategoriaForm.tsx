@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { updateCategory } from '@/app/(app)/actions/categories'
 import type { Database } from '@/lib/supabase/database.types'
 
-type CategoryRow = Database['public']['Tables']['categories']['Row']
+type CategoryRow = Database['public']['Tables']['Gestao_FamiliarWillcategories']['Row']
 
 const PRESET_COLORS = [
   '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B',

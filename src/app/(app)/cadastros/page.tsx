@@ -21,17 +21,17 @@ export default async function CadastrosPage() {
 
   const [{ data: accounts }, { data: categories }, { data: goalsRaw }] = await Promise.all([
     supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .select('*')
       .eq('family_id', family_id)
       .order('name'),
     supabase
-      .from('categories')
+      .from('Gestao_FamiliarWillcategories')
       .select('*')
       .eq('family_id', family_id)
       .order('name'),
     supabase
-      .from('goals')
+      .from('Gestao_FamiliarWillgoals')
       .select('*')
       .eq('family_id', family_id)
       .order('deadline', { ascending: true }),

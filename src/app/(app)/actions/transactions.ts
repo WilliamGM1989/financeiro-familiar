@@ -6,7 +6,7 @@ import { getFamilyId } from '@/lib/supabase/get-family'
 import { sanitizeError } from '@/lib/error-handler'
 import type { Database } from '@/lib/supabase/database.types'
 
-type TransactionRow = Database['public']['Tables']['transactions']['Row']
+type TransactionRow = Database['public']['Tables']['Gestao_FamiliarWilltransactions']['Row']
 
 export async function createTransaction(
   formData: FormData
@@ -29,6 +29,7 @@ export async function createTransaction(
     const due_date = (formData.get('due_date') as string) || null
     const paid = formData.get('paid') === 'true'
     const notes = ((formData.get('notes') as string | null) ?? '').trim() || null
+    const payment_cycle = (formData.get('payment_cycle') as TransactionRow['payment_cycle']) || null
 
     if (!account_id) return { error: 'Conta é obrigatória' }
     if (!type) return { error: 'Tipo é obrigatório' }
@@ -38,7 +39,7 @@ export async function createTransaction(
     if (notes && notes.length > 500) return { error: 'Observações excedem o tamanho máximo permitido' }
 
     const { data: account, error: accountError } = await supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .select('id')
       .eq('id', account_id)
       .eq('family_id', family_id)
@@ -47,7 +48,7 @@ export async function createTransaction(
     if (accountError || !account) return { error: 'Conta não pertence à família' }
 
     const { data, error } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .insert({
         family_id,
         account_id,
@@ -60,6 +61,7 @@ export async function createTransaction(
         due_date,
         paid,
         notes,
+        payment_cycle,
       })
       .select()
       .single()
@@ -82,7 +84,7 @@ export async function updateTransaction(
     const supabase = await createClient()
 
     const { data: existing, error: fetchError } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .select('id')
       .eq('id', id)
       .eq('family_id', family_id)
@@ -90,12 +92,12 @@ export async function updateTransaction(
 
     if (fetchError || !existing) return { error: 'Lançamento não encontrado' }
 
-    const updates: Database['public']['Tables']['transactions']['Update'] = {}
+    const updates: Database['public']['Tables']['Gestao_FamiliarWilltransactions']['Update'] = {}
 
     const account_id = formData.get('account_id') as string | null
     if (account_id) {
       const { data: account } = await supabase
-        .from('accounts')
+        .from('Gestao_FamiliarWillaccounts')
         .select('id')
         .eq('id', account_id)
         .eq('family_id', family_id)
@@ -114,6 +116,7 @@ export async function updateTransaction(
     const paidRaw = formData.get('paid') as string | null
     const notesRaw = formData.get('notes') as string | null
     const notes = notesRaw !== null ? notesRaw.trim() : null
+    const paymentCycleRaw = formData.get('payment_cycle') as string | null
 
     if (description && description.length > 500) return { error: 'Descrição excede o tamanho máximo permitido' }
     if (notes && notes.length > 500) return { error: 'Observações excedem o tamanho máximo permitido' }
@@ -126,9 +129,10 @@ export async function updateTransaction(
     if (due_date !== null) updates.due_date = due_date || null
     if (paidRaw !== null) updates.paid = paidRaw === 'true'
     if (notes !== null) updates.notes = notes
+    if (paymentCycleRaw !== null) updates.payment_cycle = (paymentCycleRaw as TransactionRow['payment_cycle']) || null
 
     const { data, error } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .update(updates)
       .eq('id', id)
       .select()
@@ -151,7 +155,7 @@ export async function deleteTransaction(
     const supabase = await createClient()
 
     const { data: existing, error: fetchError } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .select('id')
       .eq('id', id)
       .eq('family_id', family_id)
@@ -159,7 +163,7 @@ export async function deleteTransaction(
 
     if (fetchError || !existing) return { error: 'Lançamento não encontrado' }
 
-    const { error } = await supabase.from('transactions').delete().eq('id', id)
+    const { error } = await supabase.from('Gestao_FamiliarWilltransactions').delete().eq('id', id)
 
     if (error) return { error: sanitizeError(error) }
 

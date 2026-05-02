@@ -39,9 +39,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </span>
       </div>
 
-      <div className="min-h-screen flex flex-col" style={{ background: 'transparent' }}>
-        <main className="flex-1 pb-24">{children}</main>
-        <BottomNav />
+      {/*
+        Layout responsivo:
+        - Mobile: conteúdo full-width + BottomNav fixo na base
+        - Desktop (lg+): conteúdo centralizado max-w-lg com padding lateral
+      */}
+      <div className="min-h-screen flex justify-center" style={{ background: 'transparent' }}>
+        <div className="w-full max-w-lg flex flex-col min-h-screen relative">
+          <main className="flex-1 pb-24">{children}</main>
+          <BottomNav />
+        </div>
       </div>
     </>
   )

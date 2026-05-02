@@ -31,7 +31,7 @@ export default async function RelatoriosPage() {
 
     // Transações do mês
     const { data: monthTx } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .select('amount, type, paid, date, category_id, categories(name, color)')
       .eq('family_id', familyId)
       .gte('date', firstDay)

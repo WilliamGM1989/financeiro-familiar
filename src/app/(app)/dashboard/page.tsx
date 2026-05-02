@@ -102,7 +102,7 @@ export default async function DashboardPage() {
     // 1. Accounts — saldo de cada conta
     // -------------------------------------------------------------------------
     const { data: accounts } = await supabase
-      .from('accounts')
+      .from('Gestao_FamiliarWillaccounts')
       .select('id, name, color, type, initial_balance')
       .eq('family_id', familyId)
       .eq('is_active', true)
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
       const accountIds = activeAccounts.map((a) => a.id)
 
       const { data: allTx } = await supabase
-        .from('transactions')
+        .from('Gestao_FamiliarWilltransactions')
         .select('account_id, amount, type')
         .eq('family_id', familyId)
         .in('account_id', accountIds)
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
     // 2. Receitas e Despesas do mês atual — com detalhes para accordion
     // -------------------------------------------------------------------------
     const { data: monthDetailRaw } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .select(`
         id,
         description,
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
     // 3. Últimos 5 lançamentos
     // -------------------------------------------------------------------------
     const { data: recentRaw } = await supabase
-      .from('transactions')
+      .from('Gestao_FamiliarWilltransactions')
       .select(`
         id,
         description,
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
     // 4. Metas
     // -------------------------------------------------------------------------
     const { data: goalsRaw } = await supabase
-      .from('goals')
+      .from('Gestao_FamiliarWillgoals')
       .select('id, name, target_amount, current_amount, deadline')
       .eq('family_id', familyId)
       .order('deadline', { ascending: true })

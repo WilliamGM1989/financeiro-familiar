@@ -6,7 +6,7 @@ import { getFamilyId } from '@/lib/supabase/get-family'
 import { sanitizeError } from '@/lib/error-handler'
 import type { Database } from '@/lib/supabase/database.types'
 
-type CategoryRow = Database['public']['Tables']['categories']['Row']
+type CategoryRow = Database['public']['Tables']['Gestao_FamiliarWillcategories']['Row']
 
 export async function createCategory(
   formData: FormData
@@ -25,7 +25,7 @@ export async function createCategory(
     if (!type) return { error: 'Tipo é obrigatório' }
 
     const { data, error } = await supabase
-      .from('categories')
+      .from('Gestao_FamiliarWillcategories')
       .insert({ family_id, name, type, icon, color })
       .select()
       .single()
@@ -48,7 +48,7 @@ export async function updateCategory(
     const supabase = await createClient()
 
     const { data: existing, error: fetchError } = await supabase
-      .from('categories')
+      .from('Gestao_FamiliarWillcategories')
       .select('id')
       .eq('id', id)
       .eq('family_id', family_id)
@@ -56,7 +56,7 @@ export async function updateCategory(
 
     if (fetchError || !existing) return { error: 'Categoria não encontrada' }
 
-    const updates: Database['public']['Tables']['categories']['Update'] = {}
+    const updates: Database['public']['Tables']['Gestao_FamiliarWillcategories']['Update'] = {}
 
     const name = formData.get('name') as string | null
     const type = formData.get('type') as CategoryRow['type'] | null
@@ -71,7 +71,7 @@ export async function updateCategory(
     if (color) updates.color = color
 
     const { data, error } = await supabase
-      .from('categories')
+      .from('Gestao_FamiliarWillcategories')
       .update(updates)
       .eq('id', id)
       .select()
@@ -94,7 +94,7 @@ export async function deleteCategory(
     const supabase = await createClient()
 
     const { data: existing, error: fetchError } = await supabase
-      .from('categories')
+      .from('Gestao_FamiliarWillcategories')
       .select('id')
       .eq('id', id)
       .eq('family_id', family_id)
@@ -102,7 +102,7 @@ export async function deleteCategory(
 
     if (fetchError || !existing) return { error: 'Categoria não encontrada' }
 
-    const { error } = await supabase.from('categories').delete().eq('id', id)
+    const { error } = await supabase.from('Gestao_FamiliarWillcategories').delete().eq('id', id)
 
     if (error) return { error: sanitizeError(error) }
 
