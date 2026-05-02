@@ -32,6 +32,46 @@ export async function loginAction(
   redirect('/dashboard')
 }
 
+export async function forgotPasswordAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<{ error?: string; success?: string } | null> {
+  const email = formData.get('email') as string
+  if (!email) return { error: 'Informe seu e-mail.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://financeiro-familiar-theta.vercel.app'}/auth/reset-password`,
+  })
+
+  if (error) return { error: 'Erro ao enviar o e-mail. Tente novamente.' }
+
+  return { success: 'E-mail enviado! Verifique sua caixa de entrada.' }
+}
+
+export async function resetPasswordAction(
+  _prev: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const password = formData.get('password') as string
+  if (
+    password.length < 8 ||
+    !/[A-Z]/.test(password) ||
+    !/[0-9]/.test(password)
+  ) {
+    return {
+      error: 'A senha deve ter no mínimo 8 caracteres, 1 letra maiúscula e 1 número.',
+    }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) return { error: 'Erro ao redefinir senha. O link pode ter expirado.' }
+
+  redirect('/dashboard')
+}
+
 export async function registerAction(
   _prev: ActionState,
   formData: FormData
