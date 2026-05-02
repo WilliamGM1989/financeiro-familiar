@@ -320,6 +320,10 @@ export interface Database {
         Args: { p_family_id: string }
         Returns: undefined
       }
+      add_goal_progress: {
+        Args: { p_goal_id: string; p_amount: number }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
