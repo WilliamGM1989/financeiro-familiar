@@ -59,6 +59,15 @@ export default function LoginPage() {
           </p>
         )}
 
+        <div className="flex justify-end -mt-1">
+          <Link
+            href="/esqueci-senha"
+            className="text-sm text-emerald-700 font-medium hover:underline"
+          >
+            Esqueceu a senha?
+          </Link>
+        </div>
+
         <button
           type="submit"
           disabled={pending}
@@ -67,15 +76,6 @@ export default function LoginPage() {
           {pending ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
-
-      <div className="text-center mt-4">
-        <Link
-          href="/esqueci-senha"
-          className="text-sm text-gray-400 hover:text-emerald-700 hover:underline transition"
-        >
-          Esqueci minha senha
-        </Link>
-      </div>
 
       <p className="text-center text-sm text-gray-500 mt-4">
         Ainda não tem conta?{' '}
