@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+const ALLOWED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
+type AllowedMediaType = typeof ALLOWED_MEDIA_TYPES[number]
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,10 +17,25 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
+    // Rate limit: max 10 scans por usuário por hora
+    const { allowed, msUntilReset } = checkRateLimit(`scan:${user.id}`, 10, 3_600_000)
+    if (!allowed) {
+      const minutes = Math.ceil(msUntilReset / 60_000)
+      return NextResponse.json(
+        { error: `Limite de escaneamentos atingido. Tente novamente em ${minutes} minuto(s).` },
+        { status: 429 }
+      )
+    }
+
     // Receber imagem como base64
     const { imageBase64, mediaType } = await req.json()
     if (!imageBase64 || !mediaType) {
       return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 })
+    }
+
+    // Validar mediaType em runtime
+    if (!ALLOWED_MEDIA_TYPES.includes(mediaType as AllowedMediaType)) {
+      return NextResponse.json({ error: 'Tipo de imagem não suportado.' }, { status: 400 })
     }
 
     // Limitar tamanho (5MB base64 ≈ ~3.7MB real)

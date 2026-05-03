@@ -8,6 +8,10 @@ import type { Database } from '@/lib/supabase/database.types'
 
 type TransactionRow = Database['public']['Tables']['Gestao_FamiliarWilltransactions']['Row']
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const VALID_TRANSACTION_TYPES = ['income', 'expense'] as const
+const VALID_CYCLES = ['dia05', 'dia20'] as const
+
 export async function createTransaction(
   formData: FormData
 ): Promise<{ error: string } | { data: TransactionRow }> {
@@ -32,11 +36,15 @@ export async function createTransaction(
     const payment_cycle = (formData.get('payment_cycle') as TransactionRow['payment_cycle']) || null
 
     if (!account_id) return { error: 'Conta é obrigatória' }
-    if (!type) return { error: 'Tipo é obrigatório' }
+    if (account_id && !UUID_RE.test(account_id)) return { error: 'ID de conta inválido' }
+    if (category_id && !UUID_RE.test(category_id)) return { error: 'ID de categoria inválido' }
+    if (!type || !VALID_TRANSACTION_TYPES.includes(type as typeof VALID_TRANSACTION_TYPES[number])) return { error: 'Tipo inválido' }
     if (!date) return { error: 'Data é obrigatória' }
-    if (isNaN(amount)) return { error: 'Valor inválido' }
+    if (isNaN(amount) || amount <= 0) return { error: 'Valor inválido' }
     if (description && description.length > 500) return { error: 'Descrição excede o tamanho máximo permitido' }
     if (notes && notes.length > 500) return { error: 'Observações excedem o tamanho máximo permitido' }
+    const payment_cycle_raw = formData.get('payment_cycle') as string | null
+    if (payment_cycle_raw && !VALID_CYCLES.includes(payment_cycle_raw as typeof VALID_CYCLES[number])) return { error: 'Ciclo inválido' }
 
     const { data: account, error: accountError } = await supabase
       .from('Gestao_FamiliarWillaccounts')

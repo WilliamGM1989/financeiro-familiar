@@ -8,6 +8,9 @@ import type { Database } from '@/lib/supabase/database.types'
 
 type CategoryRow = Database['public']['Tables']['Gestao_FamiliarWillcategories']['Row']
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const VALID_CATEGORY_TYPES = ['income', 'expense'] as const
+
 export async function createCategory(
   formData: FormData
 ): Promise<{ error: string } | { data: CategoryRow }> {
@@ -22,7 +25,7 @@ export async function createCategory(
 
     if (!name) return { error: 'Nome é obrigatório' }
     if (name.length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
-    if (!type) return { error: 'Tipo é obrigatório' }
+    if (!type || !VALID_CATEGORY_TYPES.includes(type as typeof VALID_CATEGORY_TYPES[number])) return { error: 'Tipo de categoria inválido' }
 
     const { data, error } = await supabase
       .from('Gestao_FamiliarWillcategories')
@@ -44,6 +47,7 @@ export async function updateCategory(
   formData: FormData
 ): Promise<{ error: string } | { data: CategoryRow }> {
   try {
+    if (!UUID_RE.test(id)) return { error: 'ID inválido' }
     const family_id = await getFamilyId()
     const supabase = await createClient()
 
@@ -90,6 +94,7 @@ export async function deleteCategory(
   id: string
 ): Promise<{ error: string } | { data: null }> {
   try {
+    if (!UUID_RE.test(id)) return { error: 'ID inválido' }
     const family_id = await getFamilyId()
     const supabase = await createClient()
 

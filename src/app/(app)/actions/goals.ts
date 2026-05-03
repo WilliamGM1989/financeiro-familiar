@@ -35,9 +35,20 @@ export async function createGoal(formData: FormData) {
 
 export async function updateGoalProgress(id: string, formData: FormData) {
   const supabase = await createClient()
+  const familyId = await getFamilyId()
 
   const add = parseFloat(String(formData.get('add_amount') ?? '0'))
   if (isNaN(add) || add <= 0) return { error: 'Valor deve ser maior que zero.' }
+
+  // Verificar ownership antes de chamar a RPC
+  const { data: existing, error: fetchError } = await supabase
+    .from('Gestao_FamiliarWillgoals')
+    .select('id')
+    .eq('id', id)
+    .eq('family_id', familyId)
+    .single()
+
+  if (fetchError || !existing) return { error: 'Meta não encontrada.' }
 
   // RPC atômica — elimina o race condition de read-modify-write.
   // O banco aplica LEAST(current_amount + p_amount, target_amount) em um único UPDATE.

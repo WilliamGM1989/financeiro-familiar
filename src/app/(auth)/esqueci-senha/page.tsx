@@ -39,7 +39,7 @@ export default function EsqueciSenhaPage() {
               type="email"
               autoComplete="email"
               required
-              placeholder="willeana89@gmail.com"
+              placeholder="seu@email.com"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
             />
           </div>

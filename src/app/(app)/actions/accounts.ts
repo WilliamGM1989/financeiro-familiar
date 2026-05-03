@@ -8,6 +8,9 @@ import type { Database } from '@/lib/supabase/database.types'
 
 type AccountRow = Database['public']['Tables']['Gestao_FamiliarWillaccounts']['Row']
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const VALID_ACCOUNT_TYPES = ['checking', 'savings', 'credit_card', 'investment', 'cash', 'other'] as const
+
 export async function createAccount(
   formData: FormData
 ): Promise<{ error: string } | { data: AccountRow }> {
@@ -23,7 +26,7 @@ export async function createAccount(
 
     if (!name) return { error: 'Nome é obrigatório' }
     if (name.length > 100) return { error: 'Nome excede o tamanho máximo permitido' }
-    if (!type) return { error: 'Tipo é obrigatório' }
+    if (!type || !VALID_ACCOUNT_TYPES.includes(type as typeof VALID_ACCOUNT_TYPES[number])) return { error: 'Tipo de conta inválido' }
 
     const { data, error } = await supabase
       .from('Gestao_FamiliarWillaccounts')
@@ -45,6 +48,7 @@ export async function updateAccount(
   formData: FormData
 ): Promise<{ error: string } | { data: AccountRow }> {
   try {
+    if (!UUID_RE.test(id)) return { error: 'ID inválido' }
     const family_id = await getFamilyId()
     const supabase = await createClient()
 
@@ -94,6 +98,7 @@ export async function deleteAccount(
   id: string
 ): Promise<{ error: string } | { data: null }> {
   try {
+    if (!UUID_RE.test(id)) return { error: 'ID inválido' }
     const family_id = await getFamilyId()
     const supabase = await createClient()
 

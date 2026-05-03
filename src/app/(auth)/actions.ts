@@ -36,6 +36,16 @@ export async function forgotPasswordAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<{ error?: string; success?: string } | null> {
+  const headerList = await headers()
+  const ip =
+    headerList.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1'
+
+  const { allowed, msUntilReset } = checkRateLimit(`forgot:${ip}`, 3, 3_600_000)
+  if (!allowed) {
+    const minutes = Math.ceil(msUntilReset / 60_000)
+    return { error: `Muitas tentativas. Aguarde ${minutes} minuto(s).` }
+  }
+
   const email = formData.get('email') as string
   if (!email) return { error: 'Informe seu e-mail.' }
 
